@@ -35,17 +35,20 @@ class Operation:
         if str(user_answer) == str(self.result):
             print("You are correct!")
             python_equation = str(python_question) + str(user_answer) + "    ✓"
-            complete = (python_question, python_equation, datetime.date.today())
-            sentence = "INSERT INTO history (question, equation, date_completed) VALUES (%s, %s, %s)"
-            mycursor.execute(sentence, complete)
+            complete_insert_into_history = (python_question, python_equation, 1, datetime.date.today(), datetime.datetime.now().strftime("%H:%M:%S"))
+            insert_into_history = "INSERT INTO history (question, equation, is_answer_correct, date_completed, time_completed) VALUES (%s, %s, %s, %s, %s)"
+            mycursor.execute(insert_into_history, complete_insert_into_history)
             mydb.commit()
             Operation.score += 1
         else:
-            print("Sorry, your answer is wrong, please try again:")
+            print("Sorry, your answer is wrong")
             python_equation = str(python_question) + str(user_answer) + "    ✕"
-            complete = (python_question, python_equation, datetime.date.today())
-            sentence = "INSERT INTO history (question, equation, date_completed) VALUES (%s, %s, %s)"
-            mycursor.execute(sentence, complete)
+            complete_insert_into_history = (python_question, python_equation, 0, datetime.date.today(), datetime.datetime.now().strftime("%H:%M:%S"))
+            insert_into_history = "INSERT INTO history (question, equation, is_answer_correct, date_completed, time_completed) VALUES (%s, %s, %s, %s, %s)"
+            mycursor.execute(insert_into_history, complete_insert_into_history)
+            complete_insert_into_wrong_questions = (python_question, self.n1, self.func_symbol, self.n2)
+            insert_into_wrong_questions = "INSERT INTO wrong_questions (question, number_1, operator, number_2) VALUES (%s, %s, %s, %s)"
+            mycursor.execute(insert_into_wrong_questions, complete_insert_into_wrong_questions)
             mydb.commit()
 
 for element in range(number_of_questions):
@@ -73,7 +76,7 @@ overall_score = score_frame.format(Operation.score, number_of_questions)
 
 print(overall_score)
 
-if Operation.score / number_of_questions != 1:
+if Operation.score - number_of_questions != 0:
     redo = input("Would you like to redo the wrong questions? (Yes/No): ")
 
     while True:
@@ -85,6 +88,6 @@ if Operation.score / number_of_questions != 1:
     if redo == "No":
         quit()
 
-mycursor.execute("SELECT question FROM history WHERE equation REGEXP '✕'")
+mycursor.execute("SELECT question FROM history WHERE is_answer_correct = 1")
 for i in mycursor:
     print(i)
